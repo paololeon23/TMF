@@ -539,11 +539,6 @@
       answer: 'Abriendo la transmisión simulada de TMF SPORTS…',
       action: 'openWatch'
     },
-    remind: {
-      question: 'Recordarme el partido (alarma)',
-      answer: 'Te puedo avisar de dos formas. Elige la que prefieras:',
-      action: 'openReminder'
-    },
     editPlayer: {
       question: 'Editar características de un jugador',
       answer: 'Elige al jugador que quieras editar. Tus cambios quedan guardados en el navegador y se mantienen aunque cierres la página.',
@@ -601,9 +596,6 @@
         }
         if (data.action === 'openEditor') {
           renderPlayerPicker();
-        }
-        if (data.action === 'openReminder') {
-          renderReminderPicker();
         }
       }, 750);
     });
@@ -730,200 +722,8 @@
     return Math.max(min, Math.min(max, n));
   }
 
-  /* =========================================================
-     CHAT: recordatorio del partido (alarma navegador + .ics)
-     ========================================================= */
-  const REMIND_KEY = 'tmf_remind_armed';
-  let remindTimerId = null;
-
-  function renderReminderPicker() {
-    if (!chatMessages) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'chat-editor';
-    wrap.style.setProperty('--c', '#39ff14');
-
-    const armed = localStorage.getItem(REMIND_KEY) === '1';
-    const fmt = kickoff.toLocaleString('es-PE', {
-      weekday: 'long', day: '2-digit', month: 'long',
-      hour: '2-digit', minute: '2-digit'
-    });
-
-    wrap.innerHTML = `
-      <p class="chat-editor-title">Alarma del kick-off</p>
-      <p class="ed-hint" style="text-align:left; letter-spacing:.06em; font-size:.7rem; color:rgba(255,255,255,.7); margin:0 0 .35rem;">
-        Partido: <b style="color:#fff">${escapeHtml(fmt)}</b> · Estadio Siglo 21
-      </p>
-      <div class="ed-actions" style="flex-direction:column;">
-        <button type="button" class="ed-btn ed-btn-primary" data-r="browser">
-          <span style="display:inline-flex;align-items:center;gap:.4rem;justify-content:center">
-            ${armed ? 'Alarma del navegador ACTIVA · desactivar' : 'Activar alarma en este navegador'}
-          </span>
-        </button>
-        <button type="button" class="ed-btn ed-btn-ghost" data-r="ics">
-          Agregar al calendario del celular (.ics)
-        </button>
-        <button type="button" class="ed-btn ed-btn-ghost" data-r="test">
-          Probar el sonido de la alarma
-        </button>
-      </div>
-      <p class="ed-hint" style="text-align:left; line-height:1.5;">
-        <b style="color:#39ff14">Para que suene con el celular cerrado/bloqueado</b> usa la opción del calendario: tu celular abre la alerta con su propio sonido aunque esta página esté cerrada. La alarma del navegador solo suena si tienes esta web abierta o en una pestaña en segundo plano.
-      </p>
-    `;
-    chatMessages.appendChild(wrap);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    wrap.querySelector('[data-r="browser"]').addEventListener('click', toggleBrowserAlarm);
-    wrap.querySelector('[data-r="ics"]').addEventListener('click', downloadIcs);
-    wrap.querySelector('[data-r="test"]').addEventListener('click', () => playAlarmSound(2.2));
-  }
-
-  async function toggleBrowserAlarm() {
-    const armed = localStorage.getItem(REMIND_KEY) === '1';
-    if (armed) {
-      localStorage.removeItem(REMIND_KEY);
-      if (remindTimerId) { clearTimeout(remindTimerId); remindTimerId = null; }
-      addMessage('Alarma del navegador desactivada.', 'bot');
-      return;
-    }
-
-    if (!('Notification' in window)) {
-      addMessage('Tu navegador no soporta notificaciones. Usa la opción del calendario para que suene en el celular.', 'bot');
-      return;
-    }
-
-    let perm = Notification.permission;
-    if (perm === 'default') {
-      try { perm = await Notification.requestPermission(); } catch (_) { perm = 'denied'; }
-    }
-    if (perm !== 'granted') {
-      addMessage('No diste permiso de notificaciones. Igual puedo programar el sonido si dejas la página abierta. ¿Quieres usar el calendario del celular?', 'bot');
-      return;
-    }
-
-    localStorage.setItem(REMIND_KEY, '1');
-    scheduleBrowserAlarm();
-    addMessage(`Listo. Te avisaré con sonido y notificación cuando empiece el partido (${kickoff.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}). Mantén esta página abierta o en una pestaña.`, 'bot');
-  }
-
-  function scheduleBrowserAlarm() {
-    const ms = kickoff.getTime() - Date.now();
-    if (ms <= 0) return;
-    if (remindTimerId) clearTimeout(remindTimerId);
-    // setTimeout en navegadores está limitado a ~24.8 días; el kickoff aquí siempre es <= 7 días.
-    remindTimerId = setTimeout(fireKickoffAlarm, ms);
-  }
-
-  function fireKickoffAlarm() {
-    if (localStorage.getItem(REMIND_KEY) !== '1') return;
-    playAlarmSound(4);
-    try {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const n = new Notification('¡Llegó la hora! TMF UNITED vs LOS RIVALES', {
-          body: 'Kick-off ahora · Estadio Siglo 21 · Activa la transmisión.',
-          tag: 'tmf-kickoff',
-          requireInteraction: true
-        });
-        n.onclick = () => { window.focus(); n.close(); };
-      }
-    } catch (_) {}
-    localStorage.removeItem(REMIND_KEY);
-  }
-
-  // Genera un sonido de alarma con Web Audio (sin archivo externo).
-  function playAlarmSound(seconds = 3) {
-    try {
-      enableSound();
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-
-      const t0 = audioCtx.currentTime;
-      const beepDur = 0.18;
-      const gap = 0.12;
-      const cycle = beepDur + gap;
-      const beeps = Math.max(1, Math.floor(seconds / cycle));
-
-      for (let i = 0; i < beeps; i++) {
-        const start = t0 + i * cycle;
-        const freq = i % 2 === 0 ? 988 : 740; // alterna B5 / F#5 estilo alarma deportiva
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'square';
-        o.frequency.setValueAtTime(freq, start);
-        o.connect(g);
-        g.connect(audioCtx.destination);
-        g.gain.setValueAtTime(0.0001, start);
-        g.gain.exponentialRampToValueAtTime(0.18, start + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, start + beepDur);
-        o.start(start);
-        o.stop(start + beepDur + 0.02);
-      }
-    } catch (_) {}
-  }
-
-  function pad(n) { return String(n).padStart(2, '0'); }
-  function toIcsDate(d) {
-    return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate())
-      + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + 'Z';
-  }
-
-  function downloadIcs() {
-    const start = kickoff;
-    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-    const stamp = toIcsDate(new Date());
-    const uid = 'tmf-kickoff-' + start.getTime() + '@tmf2026';
-
-    // Alarmas: una al inicio del partido, otra 15 min antes
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//TMF//Copa Mundial TMF 2026//ES',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      'UID:' + uid,
-      'DTSTAMP:' + stamp,
-      'DTSTART:' + toIcsDate(start),
-      'DTEND:' + toIcsDate(end),
-      'SUMMARY:¡Llegó la hora! TMF UNITED vs LOS RIVALES',
-      'DESCRIPTION:Kick-off de la Copa Mundial TMF 2026. Activa la transmisión y ve cada jugada.',
-      'LOCATION:Estadio Siglo 21',
-      'STATUS:CONFIRMED',
-      'BEGIN:VALARM',
-      'TRIGGER:-PT15M',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:Faltan 15 minutos para el kick-off TMF',
-      'END:VALARM',
-      'BEGIN:VALARM',
-      'TRIGGER:PT0M',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:¡Llegó la hora! Comienza el partido TMF',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-
-    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'TMF-Kickoff.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-
-    addMessage('Descargué el archivo TMF-Kickoff.ics. Ábrelo en tu celular y agrégalo a Google Calendar / Calendario de iPhone. Con eso tu celular sonará a la hora del partido aunque la página esté cerrada.', 'bot');
-  }
-
-  // Re-armar la alarma si el usuario ya la tenía activa al recargar.
-  if (localStorage.getItem(REMIND_KEY) === '1') {
-    if (kickoff.getTime() <= Date.now()) {
-      localStorage.removeItem(REMIND_KEY);
-    } else {
-      scheduleBrowserAlarm();
-    }
-  }
+  // Limpia restos de la antigua alarma (por si quedó guardada en localStorage).
+  try { localStorage.removeItem('tmf_remind_armed'); } catch (_) {}
 
   // Close chat with ESC
   document.addEventListener('keydown', (e) => {
