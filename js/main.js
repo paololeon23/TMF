@@ -160,21 +160,69 @@
   setInterval(tickCountdown, 1000);
 
   /* =========================================================
-     PLAYERS DATA + GRID
+     PLAYERS DATA + GRID  (con persistencia en localStorage)
      ========================================================= */
-  const PLAYERS = [
-    { name: 'Chifu',        position: 'DELANTERO',   number: 9,  rating: 92, energy: 96, color: '#ffd166', stats: { ataque: 95, velocidad: 92, regate: 90, tiro: 94 } },
+  const PLAYERS_DEFAULT = [
+    { name: 'Chifu',        position: 'MEDIOCAMPO',  number: 8,  rating: 91, energy: 95, color: '#ffd166', stats: { pase: 92, vision: 90, control: 89, tiro: 91 } },
     { name: 'Paolo Neto',   position: 'MEDIOCAMPO',  number: 10, rating: 94, energy: 91, color: '#00d4ff', stats: { pase: 96, vision: 95, control: 92, tiro: 88 } },
-    { name: 'WLAN 21',      position: 'EXTREMO',     number: 21, rating: 89, energy: 93, color: '#39ff14', stats: { velocidad: 97, regate: 92, ataque: 86, pase: 84 } },
-    { name: 'Jose Ch.',     position: 'DEFENSA',     number: 4,  rating: 88, energy: 89, color: '#ff2b5b', stats: { defensa: 94, fuerza: 91, marca: 92, pase: 80 } },
+    { name: 'WLAN 21',      position: 'PORTERO',     number: 21, rating: 90, energy: 92, color: '#39ff14', stats: { reflejos: 94, atajadas: 92, posicion: 90, salida: 88 } },
+    { name: 'Jose Ch.',     position: 'MEDIOCAMPO',  number: 6,  rating: 93, energy: 90, color: '#ff2b5b', stats: { pase: 96, vision: 94, control: 93, tiro: 87 } },
     { name: 'Ratón',        position: 'PORTERO',     number: 1,  rating: 90, energy: 88, color: '#a78bfa', stats: { reflejos: 95, atajadas: 93, posicion: 91, salida: 84 } },
-    { name: 'Erick',        position: 'MEDIO DEF.',  number: 6,  rating: 87, energy: 90, color: '#22d3ee', stats: { recuperacion: 92, pase: 88, vision: 85, defensa: 86 } },
+    { name: 'Erick',        position: 'MEDIO DEF.',  number: 5,  rating: 87, energy: 90, color: '#22d3ee', stats: { recuperacion: 92, pase: 88, vision: 85, defensa: 86 } },
     { name: 'Clau',         position: 'LATERAL',     number: 3,  rating: 86, energy: 92, color: '#f472b6', stats: { velocidad: 89, centro: 88, defensa: 84, resistencia: 93 } },
     { name: 'Mono Serio',   position: 'DELANTERO',   number: 11, rating: 91, energy: 100, color: '#fb923c', stats: { ataque: 92, velocidad: 90, tiro: 95, fisico: 88 }, badge: 'MODO SERIO' }
   ];
 
+  const PLAYERS_STORAGE_KEY = 'tmf_players_v2';
+
+  function loadPlayersFromCache() {
+    try {
+      const raw = localStorage.getItem(PLAYERS_STORAGE_KEY);
+      if (!raw) return PLAYERS_DEFAULT.map(p => ({ ...p, stats: { ...p.stats } }));
+      const overrides = JSON.parse(raw) || {};
+      return PLAYERS_DEFAULT.map(p => {
+        const o = overrides[p.name];
+        if (!o) return { ...p, stats: { ...p.stats } };
+        return {
+          ...p,
+          position: o.position ?? p.position,
+          rating:   typeof o.rating === 'number' ? o.rating : p.rating,
+          energy:   typeof o.energy === 'number' ? o.energy : p.energy,
+          stats: { ...p.stats, ...(o.stats || {}) }
+        };
+      });
+    } catch (_) {
+      return PLAYERS_DEFAULT.map(p => ({ ...p, stats: { ...p.stats } }));
+    }
+  }
+
+  function savePlayerOverride(name, override) {
+    try {
+      const raw = localStorage.getItem(PLAYERS_STORAGE_KEY);
+      const all = raw ? (JSON.parse(raw) || {}) : {};
+      all[name] = { ...(all[name] || {}), ...override };
+      localStorage.setItem(PLAYERS_STORAGE_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  function resetPlayerOverride(name) {
+    try {
+      const raw = localStorage.getItem(PLAYERS_STORAGE_KEY);
+      if (!raw) return;
+      const all = JSON.parse(raw) || {};
+      delete all[name];
+      localStorage.setItem(PLAYERS_STORAGE_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  let PLAYERS = loadPlayersFromCache();
+  // Exponer para inspección rápida desde devtools
+  window.__TMF_PLAYERS__ = PLAYERS;
+
   const grid = $('#players-grid');
-  if (grid) {
+
+  function renderPlayersGrid() {
+    if (!grid) return;
     grid.innerHTML = PLAYERS.map((p, i) => {
       const initial = p.name.charAt(0).toUpperCase();
       const statRows = Object.entries(p.stats).map(([k, v]) => `
@@ -267,7 +315,11 @@
         });
       });
     }
+
+    if (window.lucide) window.lucide.createIcons();
   }
+
+  renderPlayersGrid();
 
   /* =========================================================
      DASHBOARD: counters, ring, prob bars, recovery, sparkline
@@ -480,7 +532,7 @@
     },
     players: {
       question: 'Plantilla del equipo',
-      answer: 'Chifu, Paolo Neto, WLAN 21, Jose Ch., Ratón, Erick, Clau y Mono Serio forman parte de la plantilla destacada.'
+      answer: 'Arqueros: WLAN 21 y Ratón. Mediocampo: Chifu, Paolo Neto, Jose Ch. (estilo Toni Kroos) y Erick. Defensa: Clau (lateral). Delantera: Mono Serio. Más abajo verás cada uno con sus stats.'
     },
     standings: {
       question: 'Tabla de posiciones',
@@ -490,6 +542,11 @@
       question: 'Quiero ver el partido',
       answer: 'Abriendo la transmisión simulada de TMF SPORTS…',
       action: 'openWatch'
+    },
+    editPlayer: {
+      question: 'Editar características de un jugador',
+      answer: 'Elige al jugador que quieras editar. Tus cambios quedan guardados en el navegador y se mantienen aunque cierres la página.',
+      action: 'openEditor'
     }
   };
 
@@ -541,9 +598,133 @@
         if (data.action === 'openWatch') {
           setTimeout(() => { toggleChat(false); openWatchModal(); }, 350);
         }
+        if (data.action === 'openEditor') {
+          renderPlayerPicker();
+        }
       }, 750);
     });
   });
+
+  /* =========================================================
+     CHAT: editor de jugadores (persistido en localStorage)
+     ========================================================= */
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function renderPlayerPicker() {
+    if (!chatMessages) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-editor';
+    wrap.innerHTML = `
+      <p class="chat-editor-title">Selecciona un jugador</p>
+      <div class="chat-editor-grid">
+        ${PLAYERS.map((p, i) => `
+          <button type="button" class="chat-editor-chip" data-edit="${i}" style="--c:${p.color}">
+            <span class="dot" style="background:${p.color}"></span>
+            <span class="nm">${escapeHtml(p.name)}</span>
+            <span class="po">${escapeHtml(p.position)}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+    chatMessages.appendChild(wrap);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    wrap.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = +btn.dataset.edit;
+        renderPlayerForm(idx);
+      });
+    });
+  }
+
+  function renderPlayerForm(idx) {
+    if (!chatMessages) return;
+    const p = PLAYERS[idx];
+    if (!p) return;
+
+    addMessage(`Editar a ${p.name}`, 'user');
+
+    const form = document.createElement('form');
+    form.className = 'chat-editor chat-editor-form';
+    form.style.setProperty('--c', p.color);
+    form.innerHTML = `
+      <p class="chat-editor-title">${escapeHtml(p.name)} <span class="muted">#${p.number}</span></p>
+
+      <label class="ed-row">
+        <span>Posición</span>
+        <input type="text" name="position" value="${escapeHtml(p.position)}" maxlength="18" required />
+      </label>
+
+      <div class="ed-grid">
+        <label class="ed-row">
+          <span>Rating</span>
+          <input type="number" name="rating" min="40" max="99" value="${p.rating}" required />
+        </label>
+        <label class="ed-row">
+          <span>Energía</span>
+          <input type="number" name="energy" min="0" max="100" value="${p.energy}" required />
+        </label>
+      </div>
+
+      <p class="chat-editor-sub">Estadísticas</p>
+      <div class="ed-grid">
+        ${Object.entries(p.stats).map(([k, v]) => `
+          <label class="ed-row">
+            <span>${escapeHtml(k.toUpperCase())}</span>
+            <input type="number" name="stat:${escapeHtml(k)}" min="0" max="99" value="${v}" required />
+          </label>
+        `).join('')}
+      </div>
+
+      <div class="ed-actions">
+        <button type="button" class="ed-btn ed-btn-ghost" data-action="reset">Restablecer</button>
+        <button type="submit" class="ed-btn ed-btn-primary">Guardar cambios</button>
+      </div>
+      <p class="ed-hint">Tus cambios se guardan en el cache de tu navegador.</p>
+    `;
+    chatMessages.appendChild(form);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const newStats = { ...p.stats };
+      const override = {
+        position: String(fd.get('position') || p.position).trim().toUpperCase(),
+        rating:   clampInt(fd.get('rating'), 40, 99, p.rating),
+        energy:   clampInt(fd.get('energy'), 0, 100, p.energy),
+        stats:    newStats
+      };
+      Object.keys(p.stats).forEach(k => {
+        const v = fd.get('stat:' + k);
+        if (v !== null && v !== '') newStats[k] = clampInt(v, 0, 99, p.stats[k]);
+      });
+      Object.assign(PLAYERS[idx], override);
+      savePlayerOverride(p.name, override);
+      renderPlayersGrid();
+      addMessage(`Listo. ${p.name} ahora juega como ${override.position} (rating ${override.rating}). Guardado en este navegador.`, 'bot');
+    });
+
+    form.querySelector('[data-action="reset"]').addEventListener('click', () => {
+      const def = PLAYERS_DEFAULT.find(d => d.name === p.name);
+      if (!def) return;
+      resetPlayerOverride(p.name);
+      PLAYERS[idx] = { ...def, stats: { ...def.stats } };
+      renderPlayersGrid();
+      addMessage(`Restablecí a ${p.name} a sus valores originales.`, 'bot');
+      renderPlayerForm(idx);
+    });
+  }
+
+  function clampInt(value, min, max, fallback) {
+    const n = parseInt(value, 10);
+    if (Number.isNaN(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
 
   // Close chat with ESC
   document.addEventListener('keydown', (e) => {

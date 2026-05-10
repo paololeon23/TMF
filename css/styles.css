@@ -1097,6 +1097,150 @@ body {
 }
 
 /* =====================================================================
+   CHAT EDITOR (player tweaks → localStorage)
+   ===================================================================== */
+.chat-editor {
+  --c: #00d4ff;
+  align-self: stretch;
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25));
+  border: 1px solid color-mix(in srgb, var(--c) 30%, rgba(255,255,255,.08));
+  border-radius: 0.95rem;
+  padding: 0.75rem 0.75rem 0.85rem;
+  display: flex; flex-direction: column; gap: 0.55rem;
+  animation: msgIn .35s ease both;
+  box-shadow: 0 12px 24px -16px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.02) inset;
+}
+.chat-editor-title {
+  font-family: 'Bebas Neue', system-ui, sans-serif;
+  letter-spacing: .12em;
+  font-size: .9rem;
+  color: #fff;
+  margin: 0;
+}
+.chat-editor-title .muted { color: rgba(255,255,255,.4); margin-left: 6px; font-size: .75rem; }
+.chat-editor-sub {
+  font-size: .62rem;
+  letter-spacing: .25em;
+  color: rgba(255,255,255,.5);
+  margin: .35rem 0 .1rem;
+  text-transform: uppercase;
+}
+
+.chat-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.chat-editor-chip {
+  --c: #00d4ff;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: .55rem .65rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid color-mix(in srgb, var(--c) 25%, rgba(255,255,255,.08));
+  border-radius: .65rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+  position: relative;
+  min-width: 0;
+}
+.chat-editor-chip:hover {
+  background: color-mix(in srgb, var(--c) 12%, rgba(0,0,0,.2));
+  border-color: color-mix(in srgb, var(--c) 60%, transparent);
+  transform: translateY(-1px);
+}
+.chat-editor-chip .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  position: absolute; top: 8px; right: 8px;
+  box-shadow: 0 0 8px currentColor;
+}
+.chat-editor-chip .nm {
+  font-family: 'Bebas Neue', system-ui, sans-serif;
+  letter-spacing: .08em; font-size: .82rem; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chat-editor-chip .po {
+  font-size: .58rem; letter-spacing: .18em;
+  color: rgba(255,255,255,.55);
+}
+
+.chat-editor-form .ed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.ed-row {
+  display: flex; flex-direction: column; gap: 4px;
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: .55rem;
+  padding: .45rem .55rem;
+  min-width: 0;
+}
+.ed-row > span {
+  font-size: .55rem;
+  letter-spacing: .2em;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+}
+.ed-row input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: 'Bebas Neue', system-ui, sans-serif;
+  font-size: 1rem;
+  letter-spacing: .04em;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+}
+.ed-row input:focus { color: var(--c, #00d4ff); }
+.ed-row input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.ed-row input::-webkit-outer-spin-button,
+.ed-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+
+.ed-actions {
+  display: flex; gap: 6px; margin-top: .35rem;
+}
+.ed-btn {
+  flex: 1;
+  padding: .55rem .6rem;
+  border-radius: .55rem;
+  font-family: 'Bebas Neue', system-ui, sans-serif;
+  letter-spacing: .12em;
+  font-size: .72rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all .2s ease;
+}
+.ed-btn-primary {
+  background: linear-gradient(135deg, var(--c, #00d4ff), #ffffff20);
+  color: #04060c;
+  border-color: color-mix(in srgb, var(--c, #00d4ff) 60%, transparent);
+  font-weight: 800;
+}
+.ed-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.ed-btn-ghost {
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.7);
+  border-color: rgba(255,255,255,.1);
+}
+.ed-btn-ghost:hover { color: #fff; background: rgba(255,255,255,.08); }
+.ed-hint {
+  font-size: .58rem;
+  letter-spacing: .14em;
+  color: rgba(255,255,255,.4);
+  margin: .15rem 0 0;
+  text-align: center;
+}
+
+/* =====================================================================
    CHAMPION SECTION (LoL/Dota splash)
    ===================================================================== */
 .champion-bg {
