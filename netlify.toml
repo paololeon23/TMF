@@ -14,15 +14,29 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# HTML: nunca cachear, siempre revalidar (así cada deploy se ve al instante)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# CSS: cache corto + must-revalidate. Combinado con ?v= en index.html,
+# fuerza descarga de la versión nueva apenas cambias el número.
 [[headers]]
   for = "/css/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=300, must-revalidate"
 
+# JS: igual que CSS
 [[headers]]
   for = "/js/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=300, must-revalidate"
 
 [[redirects]]
   from = "/*"
