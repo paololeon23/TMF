@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="description" content="Copa Mundial TMF 2026 - La pasión del fútbol se vive cada domingo en el Estadio Siglo 21." />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>COPA MUNDIAL TMF 2026 — La Pasión del Fútbol</title>
+
+  <!-- Preconnect / Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#05060a',
+            night: '#0a0a14',
+            panel: '#0e1020',
+            elec: '#00d4ff',
+            cobalt: '#0066ff',
+            neon: '#39ff14',
+            mint: '#00ff9d',
+            gold: '#ffd166',
+            amber: '#ffb300',
+            crimson: '#ff2b5b'
+          },
+          fontFamily: {
+            display: ['Orbitron', 'sans-serif'],
+            impact: ['"Bebas Neue"', 'sans-serif'],
+            sans: ['Inter', 'sans-serif']
+          },
+          boxShadow: {
+            glow: '0 0 30px rgba(0,212,255,.55), 0 0 80px rgba(0,212,255,.25)',
+            neon: '0 0 30px rgba(57,255,20,.55), 0 0 80px rgba(57,255,20,.25)',
+            gold: '0 0 30px rgba(255,209,102,.55), 0 0 80px rgba(255,209,102,.25)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Modern icon library -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-ink text-white antialiased overflow-x-hidden font-sans">
+
+  <!-- =================== LOADER (BIENVENIDO + BALL) =================== -->
+  <div id="loader" class="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">
+    <div class="loader-bg"></div>
+
+    <div class="relative text-center px-6">
+      <p class="loader-pre">COPA MUNDIAL TMF 2026</p>
+      <h1 class="loader-welcome">
+        <span>B</span><span>I</span><span>E</span><span>N</span><span>V</span><span>E</span><span>N</span><span>I</span><span>D</span><span>O</span>
+      </h1>
+
+      <div class="ball-stage">
+        <div class="ball">
+          <div class="ball-shine"></div>
+          <span class="ball-pent p1"></span>
+          <span class="ball-pent p2"></span>
+          <span class="ball-pent p3"></span>
+        </div>
+        <div class="ball-shadow"></div>
+      </div>
+
+      <div class="loader-bar-wrap">
+        <div id="loader-bar" class="loader-bar"></div>
+      </div>
+      <p class="loader-status">CARGANDO<span class="dots"><i>.</i><i>.</i><i>.</i></span></p>
+    </div>
+  </div>
+
+  <!-- =================== AMBIENT 3D BG =================== -->
+  <canvas id="bg-canvas" class="fixed inset-0 -z-10 w-full h-full"></canvas>
+  <div class="fixed inset-0 -z-[5] pointer-events-none bg-gradient-to-b from-ink/40 via-ink/30 to-ink"></div>
+
+  <!-- Mouse spotlight -->
+  <div id="cursor-glow" aria-hidden="true"></div>
+
+  <!-- =================== NAV =================== -->
+  <header class="fixed top-0 inset-x-0 z-50 transition-all duration-500" id="navbar">
+    <div class="max-w-7xl mx-auto px-5 md:px-10 py-4 flex items-center justify-between">
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="trophy-mini">
+          <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7 text-gold group-hover:rotate-12 transition-transform" stroke="currentColor" stroke-width="1.7">
+            <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/>
+            <path d="M7 5H4a3 3 0 0 0 3 4"/>
+            <path d="M17 5h3a3 3 0 0 1-3 4"/>
+            <path d="M9 13h6l-1 4h-4l-1-4Z"/>
+            <path d="M8 20h8"/>
+            <path d="M12 17v3"/>
+          </svg>
+        </div>
+        <div class="leading-tight">
+          <p class="font-display text-[10px] tracking-[0.4em] text-white/60">COPA MUNDIAL</p>
+          <p class="font-display text-lg font-black bg-gradient-to-r from-elec via-mint to-gold bg-clip-text text-transparent">TMF 2026</p>
+        </div>
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-7 text-sm font-medium">
+        <a href="#hero" class="nav-link">Inicio</a>
+        <a href="#match" class="nav-link">Hoy</a>
+        <a href="#jales" class="nav-link">Nuevos Jales</a>
+        <a href="#players" class="nav-link">Jugadores</a>
+        <a href="#dashboard" class="nav-link">Dashboard</a>
+        <a href="#champion" class="nav-link">App</a>
+        <a href="#schedule" class="nav-link">Calendario</a>
+      </nav>
+
+      <button type="button" data-watch-match class="hidden md:inline-flex btn-primary text-sm">
+        <span>Ver Partido</span>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+
+      <button id="nav-toggle" class="lg:hidden p-2 rounded-lg bg-white/5 border border-white/10" aria-label="Abrir menú">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden lg:hidden mx-5 md:mx-10 mt-2 p-5 rounded-2xl glass border border-white/10">
+      <nav class="grid gap-3 text-sm">
+        <a href="#hero" class="mobile-link">Inicio</a>
+        <a href="#match" class="mobile-link">Partido de hoy</a>
+        <a href="#jales" class="mobile-link">Nuevos Jales</a>
+        <a href="#players" class="mobile-link">Jugadores</a>
+        <a href="#dashboard" class="mobile-link">Dashboard</a>
+        <a href="#champion" class="mobile-link">App TMF (próximamente)</a>
+        <a href="#ambience" class="mobile-link">Atmósfera</a>
+        <a href="#schedule" class="mobile-link">Calendario</a>
+        <a href="#standings" class="mobile-link">Tabla</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- =================== HERO =================== -->
+  <section id="hero" class="relative min-h-[100svh] flex items-center justify-center px-5 md:px-10 pt-32 pb-20 overflow-hidden">
+    <!-- Animated grid -->
+    <div class="absolute inset-0 grid-overlay pointer-events-none"></div>
+
+    <!-- Floating orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="relative max-w-7xl w-full mx-auto text-center">
+      <!-- Pre-title -->
+      <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full glass border border-white/10 mb-6 hero-elem">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-crimson opacity-75 animate-ping"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-crimson"></span>
+        </span>
+        <span class="text-xs tracking-[0.35em] font-display text-white/80">EN VIVO • DOMINGO 10 MAYO • 18:30</span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="hero-title font-display font-black uppercase leading-[0.85] hero-elem">
+        <span class="block text-white/95 text-4xl sm:text-6xl md:text-8xl">COPA MUNDIAL</span>
+        <span class="block text-[clamp(3.5rem,13vw,12rem)] mt-2 bg-gradient-to-r from-elec via-mint to-gold bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(0,212,255,.35)] glitch" data-text="TMF 2026">TMF 2026</span>
+      </h1>
+
+      <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-white/70 hero-elem">
+        La pasión del fútbol se vive cada domingo. <span class="text-mint font-semibold">Once estrellas. Un solo trofeo.</span>
+      </p>
+
+      <!-- CTA -->
+      <div class="mt-10 flex flex-wrap items-center justify-center gap-4 hero-elem">
+        <button type="button" data-watch-match class="btn-primary group">
+          <span class="relative z-10 flex items-center gap-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Ver Partido de Hoy
+          </span>
+          <span class="btn-pulse"></span>
+        </button>
+        <a href="#players" class="btn-ghost">
+          Conocer al equipo
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+
+      <!-- Hero countdown (compact) -->
+      <div class="mt-14 hero-elem">
+        <p class="text-[10px] md:text-xs tracking-[0.45em] text-white/50 mb-4 font-display">CUENTA REGRESIVA AL KICK-OFF</p>
+        <div id="hero-countdown" class="flex items-center justify-center gap-3 md:gap-6 flex-wrap">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =================== MATCH OF THE DAY =================== -->
+  <section id="match" class="relative px-5 md:px-10 py-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <p class="text-xs md:text-sm tracking-[0.4em] text-elec font-display mb-3">JORNADA DOMINICAL</p>
+        <h2 class="font-display font-black text-4xl md:text-6xl uppercase">
+          Hoy se juega <span class="text-mint">a las 6:30 PM</span>
+        </h2>
+        <p class="mt-3 text-white/60 max-w-2xl mx-auto">Estadio Siglo 21 — el césped está listo, las luces encendidas, y el balón espera.</p>
+      </div>
+
+      <!-- Match Card -->
+      <div class="match-card relative overflow-hidden rounded-3xl border border-white/10 glass p-6 md:p-12 reveal">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-elec/20 rounded-full blur-[120px]"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-mint/20 rounded-full blur-[120px]"></div>
+
+        <div class="relative grid md:grid-cols-3 items-center gap-8">
+          <!-- Team A -->
+          <div class="team-block text-center md:text-right">
+            <div class="team-crest mx-auto md:ml-auto md:mr-0">
+              <span class="font-display font-black text-2xl">TMF</span>
+            </div>
+            <h3 class="mt-4 font-display font-black text-2xl md:text-3xl">TMF UNITED</h3>
+            <p class="text-white/50 text-sm tracking-widest">LOCAL</p>
+            <div class="flex items-center gap-1 justify-center md:justify-end mt-3">
+              <span class="form-pill bg-mint/20 text-mint">G</span>
+              <span class="form-pill bg-mint/20 text-mint">G</span>
+              <span class="form-pill bg-amber/20 text-amber">E</span>
+              <span class="form-pill bg-mint/20 text-mint">G</span>
+              <span class="form-pill bg-mint/20 text-mint">G</span>
+            </div>
+          </div>
+
+          <!-- VS / time -->
+          <div class="text-center">
+            <div class="inline-flex flex-col items-center">
+              <span class="text-[10px] tracking-[0.5em] text-white/50 font-display">DOMINGO 10 MAYO</span>
+              <div class="my-3 font-display font-black text-5xl md:text-7xl bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">18:30</div>
+              <div class="px-4 py-1 rounded-full border border-white/15 text-xs tracking-[0.35em] font-display">VS</div>
+              <p class="mt-4 text-sm text-white/70 inline-flex items-center justify-center gap-2">
+                <i data-lucide="map-pin" class="icon-sm text-elec"></i>
+                Estadio Siglo 21
+              </p>
+            </div>
+          </div>
+
+          <!-- Team B -->
+          <div class="team-block text-center md:text-left">
+            <div class="team-crest crest-alt mx-auto md:mr-auto md:ml-0">
+              <span class="font-display font-black text-2xl">RIV</span>
+            </div>
+            <h3 class="mt-4 font-display font-black text-2xl md:text-3xl">LOS RIVALES</h3>
+            <p class="text-white/50 text-sm tracking-widest">VISITANTE</p>
+            <div class="flex items-center gap-1 justify-center md:justify-start mt-3">
+              <span class="form-pill bg-mint/20 text-mint">G</span>
+              <span class="form-pill bg-crimson/20 text-crimson">P</span>
+              <span class="form-pill bg-mint/20 text-mint">G</span>
+              <span class="form-pill bg-amber/20 text-amber">E</span>
+              <span class="form-pill bg-crimson/20 text-crimson">P</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Big Live Countdown -->
+        <div class="mt-12 pt-10 border-t border-white/10">
+          <p class="text-center text-[10px] md:text-xs tracking-[0.5em] text-white/50 font-display mb-6">FALTA PARA EL KICK-OFF</p>
+          <div id="big-countdown" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <!-- All Sundays banner -->
+        <div class="mt-10 flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+          <div class="modern-icon text-elec"><i data-lucide="calendar-days"></i></div>
+          <p class="text-sm md:text-base text-white/80">
+            <span class="text-white font-semibold">Todos los domingos</span> — 18:30 hrs — Estadio Siglo 21
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== CHAMPION (LoL/Dota style hero) =================== -->
+  <section id="champion" class="relative px-5 md:px-10 py-24 overflow-hidden">
+    <div class="absolute inset-0 -z-[1] champion-bg"></div>
+
+    <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+      <div class="lg:col-span-5 reveal-left order-2 lg:order-1">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-elec/10 border border-elec/30 text-elec text-[10px] tracking-[0.4em] font-display mb-5">
+          <span class="w-2 h-2 rounded-full bg-elec animate-pulse"></span> COMING SOON
+        </div>
+        <h2 class="font-display font-black text-4xl md:text-6xl uppercase leading-[0.95]">
+          Pronto la <span class="bg-gradient-to-r from-elec via-mint to-gold bg-clip-text text-transparent">App TMF</span>
+        </h2>
+        <p class="mt-5 text-white/70 text-base md:text-lg">
+          Pronto tendremos la aplicación oficial para que puedas ver
+          <span class="text-mint font-semibold">todos los partidos</span> de la Copa Mundial TMF 2026 desde tu celular,
+          en cualquier momento y desde cualquier lugar.
+        </p>
+
+        <ul class="mt-6 space-y-3 text-sm text-white/75">
+          <li class="flex items-start gap-3">
+            <span class="feature-dot bg-elec"></span>
+            <span>Transmisión en vivo de cada jornada del domingo</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="feature-dot bg-mint"></span>
+            <span>Repeticiones, jugadas destacadas y mejores goles</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="feature-dot bg-gold"></span>
+            <span>Estadísticas en tiempo real y notificaciones</span>
+          </li>
+        </ul>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <button type="button" id="notify-btn" class="btn-primary text-sm">
+            <span class="flex items-center gap-2">
+              <i data-lucide="bell" class="w-4 h-4"></i>
+              Avisarme cuando esté lista
+            </span>
+            <span class="btn-pulse"></span>
+          </button>
+          <a href="#players" class="btn-ghost text-sm">
+            Ver Plantilla
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+
+        <div class="mt-7 flex flex-wrap items-center gap-3">
+          <div class="store-pill" aria-label="Próximamente en App Store">
+            <i data-lucide="apple" class="w-5 h-5"></i>
+            <div>
+              <p class="store-pre">PRÓXIMAMENTE EN</p>
+              <p class="store-name">App Store</p>
+            </div>
+          </div>
+          <div class="store-pill" aria-label="Próximamente en Google Play">
+            <i data-lucide="play" class="w-5 h-5 text-mint"></i>
+            <div>
+              <p class="store-pre">PRÓXIMAMENTE EN</p>
+              <p class="store-name">Google Play</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-7 reveal-right order-1 lg:order-2">
+        <div class="champion-frame">
+          <div class="champion-aura"></div>
+          <div class="champion-particles"></div>
+          <div class="champion-img-wrap">
+            <img src="assets/tmf-hero-champion.png" alt="App TMF próximamente" class="champion-img" loading="lazy" />
+            <div class="champion-glare"></div>
+            <div class="champion-grid"></div>
+          </div>
+
+          <div class="champion-badges">
+            <span class="cb gold"><i data-lucide="smartphone" class="w-3.5 h-3.5"></i> APP TMF</span>
+            <span class="cb mint"><i data-lucide="radio" class="w-3.5 h-3.5"></i> LIVE STREAMING</span>
+            <span class="cb elec"><i data-lucide="rocket" class="w-3.5 h-3.5"></i> PRONTO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== NUEVOS JALES =================== -->
+  <section id="jales" class="relative px-5 md:px-10 py-20">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-10 reveal">
+        <p class="text-xs tracking-[0.4em] text-amber font-display mb-3">FICHAJE OFICIAL</p>
+        <h2 class="font-display font-black text-4xl md:text-6xl uppercase">
+          Nuevos <span class="bg-gradient-to-r from-amber to-gold bg-clip-text text-transparent">Jales</span>
+          <br class="md:hidden"/> para esta Temporada
+        </h2>
+        <p class="mt-3 text-white/60 max-w-2xl mx-auto">El refuerzo estrella ya viste la camiseta de TMF UNITED.</p>
+      </div>
+
+      <div class="max-w-2xl mx-auto reveal">
+        <article class="signing-card">
+          <div class="signing-glow"></div>
+
+          <div class="signing-top">
+            <div class="signing-tag">
+              <span class="dot"></span> NUEVO JALE · TEMPORADA 2026
+            </div>
+            <div class="signing-num">#7</div>
+          </div>
+
+          <div class="signing-body">
+            <div class="signing-portrait">
+              <span>J</span>
+              <div class="signing-ring"></div>
+            </div>
+
+            <div class="signing-info">
+              <p class="signing-pre">DELANTERO · ATAQUE</p>
+              <h3 class="signing-name">JOFAX</h3>
+              <p class="signing-role">Refuerzo estrella · Velocidad y gol</p>
+
+              <div class="signing-stats">
+                <div><div class="ss-v text-amber">94</div><div class="ss-l">RATING</div></div>
+                <div><div class="ss-v text-elec">96</div><div class="ss-l">VELOCIDAD</div></div>
+                <div><div class="ss-v text-mint">92</div><div class="ss-l">REGATE</div></div>
+                <div><div class="ss-v text-gold">95</div><div class="ss-l">TIRO</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="signing-foot">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-mint"></i>
+            <span>Contrato firmado · debutó el domingo en el Estadio Siglo 21</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== PLAYERS =================== -->
+  <section id="players" class="relative px-5 md:px-10 py-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 reveal">
+        <div>
+          <p class="text-xs tracking-[0.4em] text-mint font-display mb-3">PLANTILLA OFICIAL</p>
+          <h2 class="font-display font-black text-4xl md:text-6xl uppercase leading-tight">
+            Jugadores <span class="bg-gradient-to-r from-elec to-mint bg-clip-text text-transparent">Estelares</span>
+          </h2>
+        </div>
+        <p class="max-w-md text-white/60">Tarjetas holográficas con estadísticas, energía y posición. Pasa el cursor para activar el modo HD.</p>
+      </div>
+
+      <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== DASHBOARD =================== -->
+  <section id="dashboard" class="relative px-5 md:px-10 py-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <p class="text-xs tracking-[0.4em] text-elec font-display mb-3">CENTRO DE OPERACIONES</p>
+        <h2 class="font-display font-black text-4xl md:text-6xl uppercase">
+          Dashboard <span class="text-elec">en Vivo</span>
+        </h2>
+        <p class="mt-3 text-white/60 max-w-2xl mx-auto">Métricas, rendimiento y probabilidades del próximo encuentro en tiempo real.</p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+
+        <!-- Performance card -->
+        <div class="dash-card reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <p class="text-[10px] tracking-[0.35em] text-white/50 font-display">RENDIMIENTO</p>
+              <h3 class="font-display font-black text-2xl mt-1">Equipo TMF</h3>
+            </div>
+            <div class="dash-icon bg-elec/15 text-elec"><i data-lucide="zap"></i></div>
+          </div>
+
+          <div class="text-5xl font-display font-black bg-gradient-to-r from-elec to-mint bg-clip-text text-transparent">
+            <span class="counter" data-target="92">0</span>%
+          </div>
+          <p class="mt-1 text-mint text-sm inline-flex items-center gap-1.5">
+            <i data-lucide="trending-up" class="icon-sm"></i>
+            +8% esta jornada
+          </p>
+
+          <!-- mini chart -->
+          <div class="mt-6">
+            <svg id="chart-perf" viewBox="0 0 300 90" class="w-full h-24" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradPerf" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path id="chart-perf-area" d="" fill="url(#gradPerf)"/>
+              <path id="chart-perf-line" d="" fill="none" stroke="#00d4ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Win % -->
+        <div class="dash-card reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <p class="text-[10px] tracking-[0.35em] text-white/50 font-display">VICTORIAS</p>
+              <h3 class="font-display font-black text-2xl mt-1">Temporada</h3>
+            </div>
+            <div class="dash-icon bg-mint/15 text-mint"><i data-lucide="trophy"></i></div>
+          </div>
+
+          <div class="flex items-center justify-center my-2">
+            <div class="ring-progress" data-value="78">
+              <svg viewBox="0 0 120 120" class="w-40 h-40">
+                <circle cx="60" cy="60" r="52" stroke="rgba(255,255,255,.08)" stroke-width="10" fill="none"/>
+                <circle class="ring-fg" cx="60" cy="60" r="52" stroke="url(#ringGrad)" stroke-width="10" fill="none" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                <defs>
+                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#39ff14"/>
+                    <stop offset="100%" stop-color="#00d4ff"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="ring-label">
+                <div class="font-display font-black text-3xl"><span class="counter" data-target="78">0</span>%</div>
+                <div class="text-[10px] tracking-[0.3em] text-white/50">WIN RATE</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center mt-4">
+            <div><div class="font-display text-lg text-mint">14</div><div class="text-[10px] text-white/50 tracking-widest">G</div></div>
+            <div><div class="font-display text-lg text-amber">3</div><div class="text-[10px] text-white/50 tracking-widest">E</div></div>
+            <div><div class="font-display text-lg text-crimson">1</div><div class="text-[10px] text-white/50 tracking-widest">P</div></div>
+          </div>
+        </div>
+
+        <!-- Recent Goals -->
+        <div class="dash-card reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <p class="text-[10px] tracking-[0.35em] text-white/50 font-display">GOLES RECIENTES</p>
+              <h3 class="font-display font-black text-2xl mt-1">Últimas 5</h3>
+            </div>
+            <div class="dash-icon bg-gold/15 text-gold"><i data-lucide="goal"></i></div>
+          </div>
+
+          <div class="text-5xl font-display font-black text-gold">
+            <span class="counter" data-target="23">0</span>
+          </div>
+          <p class="mt-1 text-white/50 text-sm">4.6 goles por partido</p>
+
+          <div class="flex items-end gap-2 h-24 mt-6">
+            <div class="bar-grow" style="--h: 45%;"><span>3</span></div>
+            <div class="bar-grow" style="--h: 70%;"><span>5</span></div>
+            <div class="bar-grow" style="--h: 55%;"><span>4</span></div>
+            <div class="bar-grow" style="--h: 90%;"><span>7</span></div>
+            <div class="bar-grow" style="--h: 50%;"><span>4</span></div>
+          </div>
+          <div class="grid grid-cols-5 gap-2 mt-2 text-center text-[10px] text-white/40 tracking-widest">
+            <span>J1</span><span>J2</span><span>J3</span><span>J4</span><span>J5</span>
+          </div>
+        </div>
+
+        <!-- Probabilities -->
+        <div class="dash-card lg:col-span-2 reveal">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <p class="text-[10px] tracking-[0.35em] text-white/50 font-display">PRONÓSTICO</p>
+              <h3 class="font-display font-black text-2xl mt-1">Probabilidades del Partido</h3>
+            </div>
+            <div class="dash-icon bg-elec/15 text-elec"><i data-lucide="line-chart"></i></div>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <div class="flex justify-between text-sm mb-2"><span>Victoria TMF</span><span class="text-mint font-display font-bold">62%</span></div>
+              <div class="prob-bar"><div class="prob-fg bg-gradient-to-r from-mint to-elec" data-w="62"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-2"><span>Empate</span><span class="text-amber font-display font-bold">23%</span></div>
+              <div class="prob-bar"><div class="prob-fg bg-gradient-to-r from-amber to-gold" data-w="23"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-2"><span>Victoria Rivales</span><span class="text-crimson font-display font-bold">15%</span></div>
+              <div class="prob-bar"><div class="prob-fg bg-gradient-to-r from-crimson to-amber" data-w="15"></div></div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-3 gap-3">
+            <div class="stat-mini"><div class="text-elec font-display text-xl">85%</div><div class="text-[10px] tracking-widest text-white/50">POSESIÓN ESPERADA</div></div>
+            <div class="stat-mini"><div class="text-mint font-display text-xl">14</div><div class="text-[10px] tracking-widest text-white/50">REMATES PROY.</div></div>
+            <div class="stat-mini"><div class="text-gold font-display text-xl">3.1</div><div class="text-[10px] tracking-widest text-white/50">xG ESTIMADO</div></div>
+          </div>
+        </div>
+
+        <!-- Physical level -->
+        <div class="dash-card reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <p class="text-[10px] tracking-[0.35em] text-white/50 font-display">NIVEL FÍSICO</p>
+              <h3 class="font-display font-black text-2xl mt-1">Plantilla</h3>
+            </div>
+            <div class="dash-icon bg-mint/15 text-mint"><i data-lucide="activity"></i></div>
+          </div>
+
+          <div class="text-5xl font-display font-black text-mint">
+            <span class="counter" data-target="88">0</span>%
+          </div>
+          <p class="mt-1 text-white/50 text-sm">Promedio del equipo</p>
+
+          <div class="mt-6 space-y-3 text-sm">
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span>Resistencia</span><span class="text-mint">94%</span></div>
+              <div class="prob-bar"><div class="prob-fg bg-mint" data-w="94"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span>Velocidad</span><span class="text-elec">86%</span></div>
+              <div class="prob-bar"><div class="prob-fg bg-elec" data-w="86"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span>Recuperación</span><span class="text-gold">82%</span></div>
+              <div class="prob-bar"><div class="prob-fg bg-gold" data-w="82"></div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== MODO SERIO =================== -->
+  <section id="serio" class="relative px-5 md:px-10 py-20">
+    <div class="max-w-7xl mx-auto">
+      <div class="serio-card relative overflow-hidden rounded-3xl border border-amber/30 p-8 md:p-12 reveal">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-amber/20 rounded-full blur-[140px]"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-crimson/20 rounded-full blur-[140px]"></div>
+
+        <div class="relative grid lg:grid-cols-3 gap-10 items-center">
+          <!-- Player avatar -->
+          <div class="text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber/15 border border-amber/40 text-amber text-xs tracking-[0.3em] font-display mb-5">
+              <span class="w-2 h-2 rounded-full bg-amber animate-pulse"></span> MODO SERIO
+            </div>
+            <div class="serio-portrait mx-auto lg:mx-0">
+              <div class="serio-ring"></div>
+              <div class="serio-initial">MS</div>
+            </div>
+            <h3 class="font-display font-black text-3xl md:text-4xl mt-5 uppercase">Mono <span class="text-amber">Serio</span></h3>
+            <p class="text-white/60">Recuperación post-lesión</p>
+          </div>
+
+          <!-- Description + bar -->
+          <div class="lg:col-span-2">
+            <p class="text-white/80 text-lg leading-relaxed">
+              Hace poco salió de una lesión. Aquí puedes ver el <span class="text-mint font-semibold">tiempo de recuperación</span> y su estado actual. Las cifras hablan por sí solas: <span class="text-amber font-semibold">hoy está listo para jugar.</span>
+            </p>
+
+            <div class="mt-8">
+              <div class="flex justify-between text-xs mb-3">
+                <span class="tracking-[0.3em] text-white/60 font-display">RECUPERACIÓN</span>
+                <span class="text-mint font-display font-bold">100%</span>
+              </div>
+              <div class="recovery-track">
+                <div id="recovery-bar" class="recovery-fg" data-w="100"></div>
+                <div class="recovery-glow"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+              <div class="serio-stat">
+                <div class="text-2xl font-display font-black text-amber"><span class="counter" data-target="42">0</span></div>
+                <div class="text-[10px] tracking-widest text-white/50 mt-1">DÍAS RECUPERÁNDOSE</div>
+              </div>
+              <div class="serio-stat">
+                <div class="text-2xl font-display font-black text-mint">100%</div>
+                <div class="text-[10px] tracking-widest text-white/50 mt-1">FORMA FÍSICA</div>
+              </div>
+              <div class="serio-stat">
+                <div class="text-2xl font-display font-black text-elec">8.7</div>
+                <div class="text-[10px] tracking-widest text-white/50 mt-1">PRONÓSTICO RATING</div>
+              </div>
+              <div class="serio-stat ready">
+                <div class="text-sm font-display font-black text-mint flex items-center gap-1.5"><span class="dot-pulse"></span>LISTO</div>
+                <div class="text-[10px] tracking-widest text-white/50 mt-1">PARA HOY 18:30</div>
+              </div>
+            </div>
+
+            <!-- ECG-style line -->
+            <div class="mt-6 ecg">
+              <svg viewBox="0 0 600 80" preserveAspectRatio="none" class="w-full h-16">
+                <path d="M0 40 L100 40 L130 10 L160 70 L190 40 L260 40 L290 20 L320 60 L350 40 L600 40" fill="none" stroke="#39ff14" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== STADIUM AMBIENCE VIDEO =================== -->
+  <section id="ambience" class="relative px-5 md:px-10 py-20">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-10 reveal">
+        <p class="text-xs tracking-[0.4em] text-mint font-display mb-3">ATMÓSFERA EN VIVO</p>
+        <h2 class="font-display font-black text-4xl md:text-6xl uppercase">
+          Siente el <span class="text-gold">Estadio</span>
+        </h2>
+        <p class="mt-3 text-white/60 max-w-2xl mx-auto">Las luces, los cantos, la previa del kick-off. Activa el video para sentir el Estadio Siglo 21.</p>
+      </div>
+
+      <div id="video-card" class="relative aspect-video max-w-5xl mx-auto rounded-3xl overflow-hidden border border-white/10 glass reveal cursor-pointer group">
+        <img src="assets/tmf-hero-champion.png" alt="Estadio TMF" class="absolute inset-0 w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-[1500ms]" loading="lazy"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/10"></div>
+
+        <!-- Play button -->
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="relative">
+            <div class="absolute inset-0 rounded-full bg-elec/40 animate-ping"></div>
+            <div class="relative w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-elec to-mint flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform">
+              <svg viewBox="0 0 24 24" fill="#02060a" class="w-8 h-8 md:w-12 md:h-12 ml-1"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="absolute bottom-0 inset-x-0 p-6 md:p-8 flex items-end justify-between">
+          <div>
+            <p class="text-[10px] tracking-[0.4em] text-elec font-display">EN DIRECTO · ESTADIO SIGLO 21</p>
+            <h3 class="font-display font-black text-2xl md:text-4xl mt-1">Previa Domingo 18:30</h3>
+          </div>
+          <span class="hidden md:inline-flex px-3 py-1.5 rounded-full bg-crimson text-white text-xs font-display tracking-widest items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> LIVE
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== UPCOMING + STANDINGS =================== -->
+  <section id="schedule" class="relative px-5 md:px-10 py-24">
+    <div class="max-w-7xl mx-auto grid lg:grid-cols-5 gap-8">
+
+      <!-- Upcoming matches -->
+      <div class="lg:col-span-3 reveal">
+        <p class="text-xs tracking-[0.4em] text-elec font-display mb-3">PRÓXIMAS JORNADAS</p>
+        <h2 class="font-display font-black text-3xl md:text-5xl uppercase mb-8">Calendario</h2>
+
+        <div class="space-y-4" id="upcoming-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Standings -->
+      <div id="standings" class="lg:col-span-2 reveal">
+        <p class="text-xs tracking-[0.4em] text-mint font-display mb-3">TABLA DE POSICIONES</p>
+        <h2 class="font-display font-black text-3xl md:text-5xl uppercase mb-8">Ranking</h2>
+
+        <div class="rounded-2xl glass border border-white/10 overflow-hidden">
+          <div class="grid grid-cols-12 px-4 py-3 text-[10px] tracking-widest text-white/50 font-display border-b border-white/10">
+            <div class="col-span-1">#</div>
+            <div class="col-span-6">EQUIPO</div>
+            <div class="col-span-1 text-center">PJ</div>
+            <div class="col-span-2 text-center">DG</div>
+            <div class="col-span-2 text-right">PTS</div>
+          </div>
+          <div id="standings-table">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== CTA / FOOTER =================== -->
+  <section class="relative px-5 md:px-10 py-24">
+    <div class="max-w-5xl mx-auto text-center reveal">
+      <h2 class="font-display font-black text-4xl md:text-6xl uppercase leading-tight">
+        El estadio te <span class="bg-gradient-to-r from-elec via-mint to-gold bg-clip-text text-transparent">espera</span>.
+      </h2>
+      <p class="mt-4 text-white/60 max-w-2xl mx-auto">Domingo 10 de mayo, 18:30 hrs. Estadio Siglo 21. La pasión del fútbol se vive cada domingo.</p>
+      <button type="button" data-watch-match class="btn-primary mt-8 inline-flex">
+        <span>Ver Partido de Hoy</span>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <footer class="relative border-t border-white/5 px-5 md:px-10 py-10">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-white/40">
+      <div class="flex items-center gap-3">
+        <div class="trophy-mini scale-90">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-gold" stroke="currentColor" stroke-width="1.7">
+            <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z"/>
+            <path d="M7 5H4a3 3 0 0 0 3 4"/>
+            <path d="M17 5h3a3 3 0 0 1-3 4"/>
+            <path d="M9 13h6l-1 4h-4l-1-4Z"/>
+            <path d="M8 20h8"/><path d="M12 17v3"/>
+          </svg>
+        </div>
+        <span class="font-display tracking-widest">COPA MUNDIAL TMF 2026</span>
+      </div>
+      <p>© 2026 TMF FC · Hecho con pasión por el fútbol.</p>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-white transition">Reglamento</a>
+        <a href="#" class="hover:text-white transition">Contacto</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =================== FLOATING BUTTON =================== -->
+  <button id="fab" class="fixed bottom-6 right-6 z-50" aria-label="Asistente TMF">
+    <span class="fab-glow"></span>
+    <span class="fab-pulse"></span>
+    <span class="fab-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-7 h-7">
+        <path d="M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 0 1-3.5-.62L3 21l1.62-4.5A8.96 8.96 0 0 1 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z"/>
+        <circle cx="9" cy="12" r="0.8" fill="currentColor"/>
+        <circle cx="12" cy="12" r="0.8" fill="currentColor"/>
+        <circle cx="15" cy="12" r="0.8" fill="currentColor"/>
+      </svg>
+    </span>
+  </button>
+
+  <!-- Floating chat panel -->
+  <div id="chat-panel" class="hidden">
+    <header class="chat-header">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-elec to-mint flex items-center justify-center font-display font-black text-ink">TMF</div>
+      <div>
+        <p class="font-semibold text-sm">Asistente TMF</p>
+        <p class="text-[10px] text-mint tracking-widest flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-mint"></span>EN LÍNEA</p>
+      </div>
+      <button id="chat-close" class="ml-auto w-9 h-9 rounded-lg grid place-items-center bg-white/5 hover:bg-crimson/30 border border-white/10 hover:border-crimson/50 text-white/70 hover:text-white transition" aria-label="Cerrar chat">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </header>
+
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <div class="chat-quick">
+      <button type="button" class="quick-q" data-answer="match" data-target="#match">
+        <i data-lucide="clock-3" class="icon-sm"></i>
+        ¿A qué hora juegan hoy?
+      </button>
+      <button type="button" class="quick-q" data-answer="schedule" data-target="#schedule">
+        <i data-lucide="calendar-days" class="icon-sm"></i>
+        Próximas jornadas
+      </button>
+      <button type="button" class="quick-q" data-answer="players" data-target="#players">
+        <i data-lucide="users" class="icon-sm"></i>
+        Plantilla del equipo
+      </button>
+      <button type="button" class="quick-q" data-answer="standings" data-target="#standings">
+        <i data-lucide="bar-chart-3" class="icon-sm"></i>
+        Tabla de posiciones
+      </button>
+      <button type="button" class="quick-q" data-answer="watch" data-target="#match">
+        <i data-lucide="play" class="icon-sm"></i>
+        Ver el partido (ESPN)
+      </button>
+    </div>
+
+    <p class="chat-foot">COPA MUNDIAL TMF 2026 · BOT</p>
+  </div>
+
+  <!-- =================== ESPN-STYLE WATCH MODAL =================== -->
+  <div id="watch-modal" class="watch-modal hidden" aria-hidden="true" role="dialog">
+    <div class="watch-backdrop"></div>
+
+    <div class="watch-shell">
+      <!-- Top bar -->
+      <div class="watch-bar">
+        <div class="flex items-center gap-3">
+          <div class="watch-logo">
+            <span>TMF</span><b>SPORTS</b>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-display tracking-widest bg-crimson text-white inline-flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>LIVE
+          </span>
+        </div>
+        <button id="watch-close" class="watch-close" aria-label="Cerrar reproductor">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Player area -->
+      <div class="watch-stage">
+        <div class="watch-screen">
+          <div class="watch-noise"></div>
+          <div class="watch-scanlines"></div>
+
+          <!-- Spinner -->
+          <div class="watch-loader">
+            <div class="ring"></div>
+            <div class="ring delay"></div>
+            <div class="watch-logo-big">
+              <span>TMF</span><b>SPORTS</b>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="watch-status">
+            <p id="watch-step" class="step-text">Iniciando…</p>
+            <div class="watch-bar-track"><div id="watch-progress" class="watch-bar-fg"></div></div>
+            <ul id="watch-log" class="watch-log"></ul>
+          </div>
+        </div>
+
+        <!-- Bottom HUD -->
+        <div class="watch-hud">
+          <div class="hud-team">
+            <div class="hud-crest hud-a"><span>TMF</span></div>
+            <div>
+              <p class="hud-name">TMF UNITED</p>
+              <p class="hud-meta">LOCAL · 14W 3D 1L</p>
+            </div>
+          </div>
+          <div class="hud-vs">
+            <div class="hud-clock">18:30</div>
+            <p class="hud-label">DOMINGO · ESTADIO SIGLO 21</p>
+          </div>
+          <div class="hud-team right">
+            <div>
+              <p class="hud-name">LOS RIVALES</p>
+              <p class="hud-meta">VISITA · 9W 4D 5L</p>
+            </div>
+            <div class="hud-crest hud-b"><span>RIV</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== COOKIE BANNER =================== -->
+  <div id="cookie-banner" class="cookie-banner hidden" role="dialog" aria-label="Aviso de cookies">
+    <div class="cookie-icon"><i data-lucide="cookie" class="w-6 h-6"></i></div>
+    <div class="cookie-text">
+      <p class="font-display font-bold text-sm">Cookies del partido</p>
+      <p class="text-xs text-white/60 mt-1">Usamos cookies para guardar tus preferencias del torneo, recordar la última sección que viste y mejorar la experiencia.
+        <a href="#" class="underline text-elec/80 hover:text-elec">Política</a>
+      </p>
+    </div>
+    <div class="cookie-actions">
+      <button type="button" id="cookie-reject" class="btn-ghost text-xs">Rechazar</button>
+      <button type="button" id="cookie-accept" class="btn-primary text-xs">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        Aceptar
+      </button>
+    </div>
+  </div>
+
+  <!-- Hover sound -->
+  <audio id="hover-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav"/>
+  </audio>
+
+  <!-- Scripts -->
+  <script src="js/three-scene.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
