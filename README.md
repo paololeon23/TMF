@@ -114,6 +114,4 @@ futbol tmf/
 | Dorado | `#ffd166` | Trofeo, top1 |
 | Carmesí | `#ff2b5b` | Alertas, defensa |
 
----
 
-Hecho con pasión por el fútbol.
